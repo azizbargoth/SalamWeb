@@ -79,7 +79,7 @@ import { createBrowserRouter } from "react-router-dom";
    },
  ];
 
-const AppRoutes = createBrowserRouter(routes, { basename: "/salamwebsite/" });
+const AppRoutes = createBrowserRouter(routes, { basename: "/SalamWeb/" });
 
 // eslint-disable-next-line react-refresh/only-export-components
 export { routes };
