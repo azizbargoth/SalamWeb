@@ -33,55 +33,77 @@ import SustainableDevelopment from "../pages/programs/SustainableDevelopment";
 import YouthEmpowerment from "../pages/programs/YouthEmpowerment";
 
 import MainLayout from "../components/layout/MainLayout";
+
+import ProtectedRoute from "./ProtectRoutes";//Adde By Aziz to protect routes
+import Login from "../admin/pages/Login";//added by aziz
 import { createBrowserRouter } from "react-router-dom";
+///---the below code updated by aziz
+const routes = [
+  // Public website
+  {
+    path: "/",
+    element: <MainLayout />,
+    children: [
+      { index: true, element: <Home /> },
+      { path: "about", element: <About /> },
+      { path: "programs", element: <Programs /> },
+      { path: "programs/humanitarian", element: <Humanitarian /> },
+      { path: "programs/community-support", element: <CommunitySupport /> },
+      {
+        path: "programs/sustainable-development",
+        element: <SustainableDevelopment />,
+      },
+      { path: "programs/youth-empowerment", element: <YouthEmpowerment /> },
+      { path: "projects", element: <Projects /> },
+      { path: "news", element: <News /> },
+      { path: "news/:id", element: <NewsDetails /> },
+      { path: "contact", element: <Contact /> },
+      { path: "donate", element: <Donation /> },
+      { path: "*", element: <h1>Page Not Found</h1> },
+    ],
+  },
 
- const routes = [
-   {
-     path: "/",
-     element: <MainLayout />,
-     children: [
-       { index:true, element: <Home /> },
-       { path: "about", element: <About /> },
-       { path: "programs", element: <Programs /> },
-       { path: "programs/humanitarian", element: <Humanitarian /> },
-       { path: "programs/community-support", element: <CommunitySupport /> },
-       {
-         path: "programs/sustainable-development",
-         element: <SustainableDevelopment />,
-       },
-       { path: "programs/youth-empowerment", element: <YouthEmpowerment /> },
-       { path: "projects", element: <Projects /> },
-       { path: "news", element: <News /> },
-       { path: "news/:id", element: <NewsDetails /> },
-       { path: "contact", element: <Contact /> },
-       { path: "donate", element: <Donation /> },
-       { path: "*", element: <h1>Page Not Found</h1> },
-     ],
-   },
-   {
-     element: <AdminLayout />,
-     children: [
-       { path: "admin", element: <AdminDashboard /> },
-       { path: "admin/news", element: <AdminNews /> },
-       { path: "admin/news/new", element: <AdminNewsNew /> },
-       { path: "admin/news/edit/:id", element: <AdminNewsEdit /> },
-       { path: "admin/programs", element: <AdminPrograms /> },
-       { path: "admin/programs/new", element: <AdminProgramsNew /> },
-       { path: "admin/programs/edit/:id", element: <AdminProgramsEdit /> },
-       { path: "admin/projects", element: <AdminProjects /> },
-       { path: "admin/projects/new", element: <AdminProjectsNew /> },
-       { path: "admin/projects/edit/:id", element: <AdminProjectsEdit /> },
-       { path: "admin/messages", element: <AdminMassages /> },
-       { path: "admin/messages/:id", element: <AdminMassageDetails /> },
-       { path: "admin/donations", element: <AdminDonations /> },
-       { path: "admin/donations/:id", element: <AdminDonationDetails /> },
-     ],
-   },
- ];
+  // Login page: outside both site and admin layouts
+  {
+    path: "/admin/login",
+    element: <Login />,
+  },
 
-const AppRoutes = createBrowserRouter(routes, { basename: "/SalamWeb/" });
+  // Protected admin area
+  {
+    path: "/admin",
+    element: (
+      <ProtectedRoute>
+        <AdminLayout />
+      </ProtectedRoute>
+    ),
+    children: [
+      { index: true, element: <AdminDashboard /> },
+      { path: "news", element: <AdminNews /> },
+      { path: "news/new", element: <AdminNewsNew /> },
+      { path: "news/edit/:id", element: <AdminNewsEdit /> },
+      { path: "programs", element: <AdminPrograms /> },
+      { path: "programs/new", element: <AdminProgramsNew /> },
+      { path: "programs/edit/:id", element: <AdminProgramsEdit /> },
+      { path: "projects", element: <AdminProjects /> },
+      { path: "projects/new", element: <AdminProjectsNew /> },
+      { path: "projects/edit/:id", element: <AdminProjectsEdit /> },
+      { path: "messages", element: <AdminMassages /> },
+      { path: "messages/:id", element: <AdminMassageDetails /> },
+      { path: "donations", element: <AdminDonations /> },
+      { path: "donations/:id", element: <AdminDonationDetails /> },
+    ],
+  },
+];
+
+const AppRoutes = createBrowserRouter(routes, {
+  basename: "/SalamWeb/",
+});
+
+
+
 
 // eslint-disable-next-line react-refresh/only-export-components
 export { routes };
-
 export default AppRoutes;
+
