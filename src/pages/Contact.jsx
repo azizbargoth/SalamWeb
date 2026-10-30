@@ -2,7 +2,7 @@ function Contact() {
   return (
     <main dir="rtl" className="bg-slate-50">
       {/* Hero */}
-      <section className="bg-[#3d2a1c] px-6 py-16 text-center text-white">
+      <section className="bg-secondary-700 px-6 py-16 text-center text-white">
         <div className="mx-auto max-w-4xl">
           <h1 className="mb-4 text-4xl font-bold md:text-5xl">اتصل بنا</h1>
 
@@ -30,12 +30,12 @@ function Contact() {
             <div className="space-y-4">
               {/* Address */}
               <div className="flex items-start gap-4 rounded-xl bg-white p-5 shadow-sm">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#3d2a1c] text-xl text-white">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-secondary-700 text-xl text-white">
                   📍
                 </div>
 
                 <div>
-                  <h3 className="mb-1 font-bold text-[#3d2a1c]">العنوان</h3>
+                  <h3 className="mb-1 font-bold text-secondary-700">العنوان</h3>
 
                   <p className="text-slate-600">عنوان منظمة السلام</p>
                 </div>
@@ -48,7 +48,7 @@ function Contact() {
                 </div>
 
                 <div>
-                  <h3 className="mb-1 font-bold text-[#3d2a1c]">الهاتف</h3>
+                  <h3 className="mb-1 font-bold text-secondary-700">الهاتف</h3>
 
                   <p dir="ltr" className="text-slate-600">
                     +000 000 000 000
