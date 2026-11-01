@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-
+import { useAuth } from "../../app/AuthContext";
 const menuItems = [
   {
     label: "لوحة التحكم",
@@ -48,6 +48,7 @@ const menuItems = [
 ];
 
 export default function AdminSidebar({ isOpen, onClose }) {
+const { user } = useAuth();
   return (
     <>
       {/* Mobile overlay */}
@@ -154,7 +155,7 @@ export default function AdminSidebar({ isOpen, onClose }) {
                 text-white
               "
             >
-              A
+              {user.data.full_name.slice(0, 1)}
             </div>
 
             {/* User information */}

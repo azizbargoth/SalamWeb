@@ -16,10 +16,11 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     let cancelled = false;
 
-    fetch(`${API_BASE}/me`, { credentials: "include" })
+    fetch(`${API_BASE}/me`, { method: "GET", credentials: "include" })
       .then(async (res) => {
         if (!res.ok) return null;
         const data = await res.json();
+        console.log(data)
         return data.user ?? data;
       })
       .then((authenticatedUser) => {

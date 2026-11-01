@@ -7,9 +7,9 @@ import { useAuth } from '../../app/AuthContext';
 import Api from '../../data/api';
 import { useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from 'react-toastify';
-import { notefyInfo } from '../../js/Tosats';
+import { notefyInfo,notefySuccess } from '../../js/Tosats';
 const inputClass =
-  "w-full rounded-lg border border-[#262B36] text-[#E8E6E1] placeholder-[#8B92A3]/60 px-3.5 py-2.5 text-sm outline-none focus:border-[#E8A33D] focus:ring-1 focus:ring-[#E8A33D] transition-colors";
+  "w-full rounded-lg border border-[#262B36] text-black placeholder-[#8B92A3]/60 px-3.5 py-2.5 text-sm outline-none focus:border-[#E8A33D] focus:ring-1 focus:ring-[#E8A33D] transition-colors";
 
 const loginSchema= Yup.object({
      email: Yup.string().email("Enter a valid email.").required("Email is required."),
@@ -29,22 +29,36 @@ const LoginForm1 = ({onSuccess}) => {
       const [resMessage,SetResMessage]=useState("")
       const handleSubmit = async (values, { setSubmitting }) =>{
         try { 
-             notefyInfo("loging in ......")
-             const resMessage=await Api.post("/auth/login",values)
+            
+             const response = await Api.post("/auth/login", values);
              
-             SetResMessage(resMessage.data.message)
-           
-            if(!resMessage.data){
-                throw new Error(resMessage.data.message || "Couldn't sign in. Check your credentials.");
+             SetResMessage(response.data.message);
+            //  notefyInfo(resMessage);
+            // if(!resMessage.data){
+            //     throw new Error(resMessage.error || "Couldn't sign in. Check your credentials.");
+            // }
+            //Update from Manus
+           const user = response.data?.data?.user;
+            if (!user) {
+              throw new Error(
+                "Login succeeded, but the server response did not include a user.",
+              );
             }
           
-            login(values.user ?? resMessage.data); // updates AuthContext so ProtectedRoute lets you through
-            onSuccess?.(resMessage.data.message);
-            
-            navigate("/admin")
+            login(user); // updates AuthContext so ProtectedRoute lets you through  
+             notefySuccess(resMessage || "Signed in successfully.");     
+        navigate("/admin", { replace: true });
+        
              
         } catch (err) {
-          setFormError(err.resMessage.data.message || "Something went wrong. Try again.");
+          // setFormError(err.resMessage.data.message || "Something went wrong. Try again.");
+          const message =
+            err.response?.data?.message ||
+            err.message ||
+            "Couldn't sign in. Check your credentials and try again.";
+
+          setFormError(message);
+          toast.error(message);
         } finally {
           setSubmitting(false);
         }
@@ -55,16 +69,16 @@ const LoginForm1 = ({onSuccess}) => {
       <div>
         <div className='text-center'><ToastContainer />
           <p className="font-mono text-xs tracking-[0.2em]  uppercase mb-2">
-            Welcome back
+            
           </p>
-          <h1 className="text-2xl font-semibold ">Sign in</h1>
+          <h1 className="text-2xl font-semibold font-serif mb-12">login</h1>
         </div>
         <Formik           
           initialValues={{ email: "", password: "" }}
           validationSchema={loginSchema}
           onSubmit={handleSubmit}>
             {({isSubmitting}) => (
-              <Form className="bg-slate-700/50 border border-[#bbdefb] rounded-xl px-6 sm:p-8" noValidate>
+              <Form className="bg-slate-200/50 border border-[#bbdefb] rounded-xl px-6 sm:p-8" noValidate>
                 {formError && (
                   <div className="mb-5 rounded-lg border border-[#F87171]/30 bg-[#F87171]/10 px-3 py-2.5">
                     <span className="text-[#9b2226] text-sm">{formError}</span>
@@ -106,12 +120,12 @@ const LoginForm1 = ({onSuccess}) => {
               </Form>
             )}
         </Formik>
-        <p className="mt-6 text-center text-sm text-[#8B92A3]">
+        {/* <p className="mt-6 text-center text-sm text-[#8B92A3]">
           Don't have an account?{" "}
           <a href="/register" className="text-[#E8A33D] hover:underline">
             Create one
-          </a>
-        </p>
+          </a> 
+         </p> */}
       </div>
     </div>
   )

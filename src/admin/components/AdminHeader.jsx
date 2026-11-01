@@ -1,4 +1,10 @@
+
+import { useAuth } from "../../app/AuthContext";
+
 export default function AdminHeader({ onMenuClick }) {
+
+  const {user}=useAuth();
+
   return (
     <header
       className="
@@ -105,7 +111,7 @@ export default function AdminHeader({ onMenuClick }) {
               hover:shadow-md
             "
           >
-            A
+            {user.data.full_name.slice(0,1)}
           </button>
         </div>
       </div>
