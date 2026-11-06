@@ -49,6 +49,11 @@ const menuItems = [
 
 export default function AdminSidebar({ isOpen, onClose }) {
 const { user } = useAuth();
+ const fullName =
+   user?.full_name ||
+   user?.name ||
+   [user?.firstName, user?.lastName].filter(Boolean).join(" ") ||
+   "no full name";
   return (
     <>
       {/* Mobile overlay */}
@@ -155,16 +160,18 @@ const { user } = useAuth();
                 text-white
               "
             >
-              {/* {user.data.full_name.slice(0, 1)} */}
+              {user.full_name.slice(0, 1)}
             </div>
 
             {/* User information */}
             <div className="min-w-0">
               <p className="truncate text-sm font-semibold text-slate-900">
-                Administrator
+                {user.full_name}
               </p>
 
-              <p className="truncate text-xs text-slate-500">مدير النظام</p>
+              <p className="truncate text-xs text-slate-500">
+                {user.role_name}
+              </p>
             </div>
           </div>
         </div>
