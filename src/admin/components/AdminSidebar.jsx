@@ -155,7 +155,7 @@ const { user } = useAuth();
                 text-white
               "
             >
-              {user.data.full_name.slice(0, 1)}
+              {/* {user.data.full_name.slice(0, 1)} */}
             </div>
 
             {/* User information */}

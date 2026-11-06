@@ -4,8 +4,17 @@ import { createContext, useContext, useEffect, useState } from "react";
 
 const API_BASE =
   import.meta.env?.VITE_API_BASE || "http://localhost:5000/api/auth";
+const API_ORIGIN = new URL(API_BASE, window.location.origin).origin;
 
 const AuthContext = createContext(null);
+function getUserFromResponse(response) {
+  const payload = response?.data ?? response;
+  return payload?.data?.user ?? payload?.data ?? payload?.user ?? payload;
+}
+
+export function getMediaUrl(path) {
+  return path ? new URL(path, API_ORIGIN).toString() : "";
+}
 
 // Wrap your app in this once, at the root:
 //   <AuthProvider><App /></AuthProvider>
@@ -19,9 +28,9 @@ export function AuthProvider({ children }) {
     fetch(`${API_BASE}/me`, { method: "GET", credentials: "include" })
       .then(async (res) => {
         if (!res.ok) return null;
-        const data = await res.json();
-        console.log(data)
-        return data.user ?? data;
+        // const data = await res.json();
+        // console.log(data)
+        return getUserFromResponse(await res.json());
       })
       .then((authenticatedUser) => {
         if (!cancelled) setUser(authenticatedUser);
@@ -39,6 +48,8 @@ export function AuthProvider({ children }) {
   }, []);
 
   const login = (userData) => setUser(userData);
+  const updateUser = (updates) =>
+    setUser((current) => ({ ...current, ...updates }));
 
   const logout = async () => {
     try {
@@ -53,7 +64,7 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, loading, login, logout, isAuthenticated: !!user }}
+      value={{ user, loading, login, logout, updateUser, isAuthenticated: !!user }}
     >
       {children}
     </AuthContext.Provider>
