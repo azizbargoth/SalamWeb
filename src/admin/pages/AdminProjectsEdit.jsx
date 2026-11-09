@@ -1,35 +1,8 @@
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import Api from "../../data/api";
 
-const projectsData = [
-  {
-    id: 1,
-    title: "مشروع دعم الأسر",
-    description: "مشروع يهدف إلى دعم الأسر المحتاجة وتحسين ظروفها المعيشية.",
-    content:
-      "يهدف هذا المشروع إلى تقديم الدعم للأسر المحتاجة من خلال مجموعة من المبادرات والخدمات التي تساعد على تحسين الظروف المعيشية وتعزيز الاستقرار الاجتماعي.",
-    image: "/images/projects/family-support.jpg",
-    status: "نشط",
-  },
-  {
-    id: 2,
-    title: "مشروع التعليم",
-    description: "مبادرة لدعم التعليم وتوفير فرص تعليمية أفضل للأطفال والشباب.",
-    content:
-      "يركز المشروع على دعم العملية التعليمية وتوفير بيئة مناسبة للأطفال والشباب للحصول على فرص تعليمية تساعدهم على بناء مستقبل أفضل.",
-    image: "/images/projects/education.jpg",
-    status: "نشط",
-  },
-  {
-    id: 3,
-    title: "مشروع الرعاية الصحية",
-    description: "تقديم الدعم والخدمات الصحية للفئات الأكثر احتياجًا.",
-    content:
-      "يسعى المشروع إلى توفير خدمات صحية ودعم طبي للفئات الأكثر احتياجًا.",
-    image: "/images/projects/health.jpg",
-    status: "غير نشط",
-  },
-];
+const projectsData = [];
 
 function AdminProjectsEdit() {
   const { id } = useParams();

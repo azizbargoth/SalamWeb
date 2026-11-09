@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 
+
 function News() {
   const news = [
     {

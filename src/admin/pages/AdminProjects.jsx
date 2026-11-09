@@ -1,5 +1,38 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState,useEffect } from "react";
 import { Link } from "react-router-dom";
+
+import Api from "../../data/api";
+
+const PROJECT_STATUS_LABELS = {
+  planned: "مخطط",
+  ongoing: "جاري",
+  completed: "مكتمل",
+  suspended: "موقوف",
+};
+
+const VISIBILITY_LABELS = {
+  draft: "مسودة",
+  scheduled: "مجدول",
+  published: "منشور",
+  archived: "مؤرشف",
+};
+const PROJECT_STATUS_FILTERS = [
+  { label: "الكل", value: "all" },
+  { label: "مخطط", value: "planned" },
+  { label: "جاري", value: "ongoing" },
+  { label: "مكتمل", value: "completed" },
+  { label: "موقوف", value: "suspended" },
+];
+function mapProject(project) {
+  return {
+    ...project,
+    description: project.summary ?? project.description ?? "",
+    image: project.cover_image ?? "",
+    statusLabel: PROJECT_STATUS_LABELS[project.status] ?? project.status,
+    visibilityLabel:
+      VISIBILITY_LABELS[project.visibility] ?? project.visibility,
+  };
+}
 
 const initialProjects = [
   {
@@ -37,23 +70,59 @@ const initialProjects = [
 ];
 
 function AdminProjects() {
-  const [projects, setProjects] = useState(initialProjects);
+  const [projects, setProjects] = useState([]);
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState("الكل");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [reloadKey, setReloadKey] = useState(0);
+  // Load API data into the projects state.
+  useEffect(() => {
+    const controller = new AbortController();
 
+    async function loadProjects() {
+      setLoading(true);
+      setError("");
+
+      try {
+        const response = await Api.get("/projects/admin/list", {
+          params: { page: 1, limit: 50 },
+          signal: controller.signal,
+        });
+        const rows = response.data?.data ?? [];
+        setProjects(rows.map(mapProject));
+      } catch (requestError) {
+        if (requestError.code !== "ERR_CANCELED") {
+          setError("تعذر تحميل المشاريع. تحقق من تسجيل الدخول واتصال الخادم.");
+        }
+      } finally {
+        if (!controller.signal.aborted) setLoading(false);
+      }
+    }
+
+    void loadProjects();
+    // useEffect returns cleanup, not the project list.
+    return () => controller.abort();
+  }, [reloadKey]);
+  
+  // Derive the displayed list from the loaded projects and current filters.
   const filteredProjects = useMemo(() => {
+    const query = search.trim().toLowerCase();
+
     return projects.filter((project) => {
-      const searchValue = search.toLowerCase();
+      const matchesSearch = [
+        project.title,
+        project.summary,
+        project.description,
+      ].some((value) => value?.toLowerCase().includes(query));
 
-      const matchesSearch =
-        project.title.toLowerCase().includes(searchValue) ||
-        project.description.toLowerCase().includes(searchValue);
+      // Compare with the backend value, e.g. "ongoing", not its Arabic label.
+      const matchesStatus =
+        statusFilter === "all" || project.status === statusFilter;
 
-      const matchesFilter = filter === "الكل" || project.status === filter;
-
-      return matchesSearch && matchesFilter;
+      return matchesSearch && matchesStatus;
     });
-  }, [projects, search, filter]);
+  }, [projects, search, statusFilter]);
 
   const activeCount = projects.filter(
     (project) => project.status === "نشط",
@@ -76,15 +145,31 @@ function AdminProjects() {
     );
   };
 
-  const deleteProject = (id) => {
+  async function deleteProject(id) {
     const confirmed = window.confirm("هل أنت متأكد من حذف هذا المشروع؟");
 
     if (!confirmed) return;
+    try {
+      await Api.delete(`/projects/${id}`);
+      setProjects((current) => current + 1);
+    } catch {
+      setError("تعذر حذف المشروع.");
+    }
+  }
+  async function toggleVisibility(project) {
+    const nextVisibility =
+      project.visibility === "published" ? "draft" : "published";
 
-    setProjects((currentProjects) =>
-      currentProjects.filter((project) => project.id !== id),
-    );
-  };
+    try {
+      await Api.patch(`/projects/${project.id}`, {
+        visibility: nextVisibility,
+      });
+
+      setReloadKey((current) => current + 1);
+    } catch {
+      setError("تعذر تحديث ظهور المشروع.");
+    }
+  }
 
   return (
     <main dir="rtl" className="min-h-screen bg-slate-50">
@@ -140,18 +225,19 @@ function AdminProjects() {
             </div>
 
             <div className="flex flex-wrap gap-2">
-              {["الكل", "نشط", "غير نشط"].map((item) => (
+              {PROJECT_STATUS_FILTERS.map(({ label, value }) => (
                 <button
-                  key={item}
+                  key={value}
                   type="button"
-                  onClick={() => setFilter(item)}
+                  onClick={() => setStatusFilter(value)}
+                  aria-pressed={statusFilter === value}
                   className={`rounded-xl px-5 py-2.5 text-sm font-semibold transition ${
-                    filter === item
+                    setStatusFilter === label
                       ? "bg-[#78B33B] text-white"
                       : "bg-slate-100 text-slate-600 hover:bg-[#3d2a1c] hover:text-white"
                   }`}
                 >
-                  {item}
+                  {label}
                 </button>
               ))}
             </div>
@@ -159,6 +245,7 @@ function AdminProjects() {
         </div>
 
         {/* Projects */}
+
         {filteredProjects.length === 0 ? (
           <div className="rounded-2xl bg-white px-6 py-16 text-center shadow-sm">
             <div className="mb-4 text-4xl">⌕</div>
@@ -171,70 +258,75 @@ function AdminProjects() {
           </div>
         ) : (
           <div className="grid gap-6 md:grid-cols-2">
-            {filteredProjects.map((project) => (
-              <article
-                key={project.id}
-                className="overflow-hidden rounded-2xl bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-md"
-              >
-                {/* Image */}
-                <div className="relative h-56 overflow-hidden bg-slate-200">
-                  <img
-                    src={project.image}
-                    alt={project.title}
-                    className="h-full w-full object-cover transition duration-300 hover:scale-105"
-                  />
+            {loading && <p>جارٍ تحميل المشاريع...</p>}
+            {error && <p role="alert">{error}</p>}
 
-                  <div className="absolute right-4 top-4">
-                    <span
-                      className={`rounded-full px-4 py-1.5 text-xs font-semibold ${
-                        project.status === "نشط"
-                          ? "bg-[#78B33B] text-white"
-                          : "bg-slate-700 text-white"
-                      }`}
-                    >
-                      {project.status}
-                    </span>
+            {!loading &&
+              !error &&
+              filteredProjects.map((project) => (
+                <article
+                  key={project.id}
+                  className="overflow-hidden rounded-2xl bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-md"
+                >
+                  {/* Image */}
+                  <div className="relative h-56 overflow-hidden bg-slate-200">
+                    <img
+                      src={project.image}
+                      alt={project.title}
+                      className="h-full w-full object-cover transition duration-300 hover:scale-105"
+                    />
+
+                    <div className="absolute right-4 top-4">
+                      <span
+                        className={`rounded-full px-4 py-1.5 text-xs font-semibold ${
+                          project.statusLabel === "جاري"
+                            ? "bg-[#78B33B] text-white"
+                            : "bg-slate-700 text-white"
+                        }`}
+                      >
+                        {project.statusLabel}
+                      </span>
+                    </div>
                   </div>
-                </div>
 
-                {/* Content */}
-                <div className="p-6">
-                  <h2 className="text-xl font-bold text-[#3d2a1c]">
-                    {project.title}
-                  </h2>
+                  {/* Content */}
+                  <div className="p-6">
+                    <h2 className="text-xl font-bold text-[#3d2a1c]">
+                      {project.title}
+                    </h2>
 
-                  <p className="mt-3 min-h-[72px] text-sm leading-7 text-slate-500">
-                    {project.description}
-                  </p>
+                    <p className="mt-3 min-h-[72px] text-sm leading-7 text-slate-500">
+                      {project.description}
+                    </p>
 
-                  {/* Actions */}
-                  <div className="mt-6 flex flex-wrap gap-2 border-t border-slate-100 pt-5">
-                    <Link
-                      to={`/admin/projects/edit/${project.id}`}
-                      className="rounded-lg bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-[#3d2a1c] hover:text-white"
-                    >
-                      تعديل
-                    </Link>
+                    {/* Actions */}
+                    <div className="mt-6 flex flex-wrap gap-2 border-t border-slate-100 pt-5">
+                      <Link
+                        to={`/admin/projects/edit/${project.id}`}
+                        className="rounded-lg bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-[#3d2a1c] hover:text-white"
+                      >
+                        تعديل
+                      </Link>
 
-                    <button
-                      type="button"
-                      onClick={() => toggleStatus(project.id)}
-                      className="rounded-lg bg-[#78B33B]/10 px-4 py-2 text-sm font-semibold text-[#78B33B] transition hover:bg-[#78B33B] hover:text-white"
-                    >
-                      {project.status === "نشط" ? "تعطيل" : "تفعيل"}
-                    </button>
+                      <button
+                        type="button"
+                        onClick={() => toggleStatus(project.id)}
+                        className="rounded-lg bg-[#78B33B]/10 px-4 py-2 text-sm font-semibold text-[#78B33B] transition hover:bg-[#78B33B] hover:text-white"
+                      >
+                        {project.status === "جاري" ? "تعطيل" : "تفعيل"}
+                      </button>
 
-                    <button
-                      type="button"
-                      onClick={() => deleteProject(project.id)}
-                      className="rounded-lg bg-red-50 px-4 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-600 hover:text-white"
-                    >
-                      حذف
-                    </button>
+                      <button
+                        type="button"
+                        onClick={() => deleteProject(project.id)}
+                        className="rounded-lg bg-red-50 px-4 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-600 hover:text-white"
+                      >
+                        حذف
+                      </button>
+                    </div>
                   </div>
-                </div>
-              </article>
-            ))}
+                </article>
+              ))}
           </div>
         )}
       </section>

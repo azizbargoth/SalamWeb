@@ -4,7 +4,7 @@ const menuItems = [
   {
     label: "لوحة التحكم",
     path: "/admin",
-    icon: "▦",
+    icon: "📊",
   },
   {
     label: "المحتوى",
@@ -13,37 +13,47 @@ const menuItems = [
   {
     label: "الأخبار",
     path: "/admin/news",
-    icon: "▤",
+    icon: "📰",
+  },
+  {
+    label: "الاعلانات",
+    path: "/admin/announcements",
+    icon: "📢",
   },
   {
     label: "البرامج",
     path: "/admin/programs",
-    icon: "◫",
+    icon: "💻",
+  },
+  {
+    label: "الشركاء",
+    path: "/admin/partners",
+    icon: "🤝",
   },
   {
     label: "المشاريع",
     path: "/admin/projects",
-    icon: "▱",
+    icon: "💼",
   },
   {
     label: "الرسائل",
-    path: "/admin/messages",
-    icon: "✉",
+    path: "/admin/contact",
+    icon: "✉️",
   },
   {
     label: "التبرعات",
     path: "/admin/donations",
-    icon: "♡",
+    icon: "❤️",
   },
   {
     label: "الوسائط",
     path: "/admin/media",
-    icon: "▧",
+    icon: "🖼️",
   },
   {
     label: "الإعدادات",
     path: "/admin/settings",
-    icon: "⚙",
+    icon: "⚙️",
   },
 ];
 

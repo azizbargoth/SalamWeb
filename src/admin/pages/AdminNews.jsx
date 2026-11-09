@@ -1,6 +1,13 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import Api from "../../data/api";
 
+const STATUS_LABELS = {
+  published: "منشور",
+  draft: "مسودة",
+  scheduled: "مجدول",
+  archived: "مؤرشف",
+};
 const initialNews = [
   {
     id: 1,
@@ -35,9 +42,58 @@ const initialNews = [
 ];
 
 function AdminNews() {
-  const [news, setNews] = useState(initialNews);
+  // const [news, setNews] = useState(initialNews);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("الكل");
+  const [news, setNews] = useState([]);
+  const [totalNews, setTotalNews] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [reloadKey, setReloadKey] = useState(0);
+  useEffect(() => {
+    const controller = new AbortController();
+
+    async function loadNews() {
+      setLoading(true);
+      setError("");
+
+      try {
+        // Loads up to 100 admin posts, including drafts.
+        const response = await Api.get("/posts/admin/list", {
+          params: { page: 1, limit: 100 },
+          signal: controller.signal,
+        });
+
+        const posts = response.data?.data ?? [];
+        setNews(posts.map(mapPostToNews));
+        setTotalNews(response.data?.meta?.total ?? posts.length);
+      } catch (requestError) {
+        if (requestError.code !== "ERR_CANCELED") {
+          setError("تعذر تحميل الأخبار. تحقق من تسجيل الدخول واتصال الخادم.");
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setLoading(false);
+        }
+      }
+    }
+
+    void loadNews();
+    return () => controller.abort();
+  }, [reloadKey]);
+
+  function mapPostToNews(post) {
+    return {
+      id: post.id, // Backend post IDs are UUIDs.
+      title: post.title,
+      description: post.excerpt ?? "",
+      category: post.category_id ? `تصنيف ${post.category_id}` : "عام",
+      date: post.published_at ?? post.created_at ?? "—",
+      image: post.featured_image ?? "",
+      apiStatus: post.status,
+      status: STATUS_LABELS[post.status] ?? post.status,
+    };
+  }
 
   const filteredNews = useMemo(() => {
     return news.filter((item) => {

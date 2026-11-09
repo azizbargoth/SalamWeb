@@ -1,29 +1,7 @@
-const stats = [
-  {
-    title: "البرامج",
-    value: "12",
-    description: "برنامج مسجل",
-    icon: "▣",
-  },
-  {
-    title: "المشاريع",
-    value: "8",
-    description: "مشروع نشط",
-    icon: "◇",
-  },
-  {
-    title: "الأخبار",
-    value: "24",
-    description: "خبر منشور",
-    icon: "▤",
-  },
-  {
-    title: "التبرعات",
-    value: "—",
-    description: "سيتم ربطها لاحقًا",
-    icon: "♡",
-  },
-];
+
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Link } from "react-router-dom";
+import Api from "../../data/api";
 
 const recentActivity = [
   {
@@ -43,7 +21,124 @@ const recentActivity = [
   },
 ];
 
+// ✅ ADD: request only one row; the API returns the full count in meta.total.
+  async function fetchTotal(endpoint, signal) {
+    const response = await Api.get(endpoint, {
+      params: { page: 1, limit: 1 },
+      signal,
+    });
+
+    return response.data?.meta?.total ?? 0;
+  }
+
+  const emptyOverview = {
+    posts: null,
+    projects: null,
+    sectors: null,
+    messages: null,
+  };
+
 export default function AdminDashboard() {
+  
+
+  // ✅ ADD: keep dashboard counts in state so they update when the API responds.
+  const [overview, setOverview] = useState(emptyOverview);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+
+  // ✅ ADD: cancel a previous refresh or the request when the page unmounts.
+  const requestControllerRef = useRef(null);
+
+  // ✅ ADD: fetch each count together; a failed endpoint won't hide the other counts.
+  const refreshOverview = useCallback(async () => {
+    requestControllerRef.current?.abort();
+
+    const controller = new AbortController();
+    requestControllerRef.current = controller;
+
+    setLoading(true);
+    setLoadError("");
+
+    const endpoints = [
+      ["posts", "/posts/admin/list"],
+      ["projects", "/projects/admin/list"],
+      ["sectors", "/sectors/admin/list"],
+      ["messages", "/contact"],
+    ];
+
+    const results = await Promise.allSettled(
+      endpoints.map(async ([key, endpoint]) => [
+        key,
+        await fetchTotal(endpoint, controller.signal),
+      ]),
+    );
+    // Ignore results from a refresh that was canceled or replaced.
+    if (controller.signal.aborted) return;
+
+    const nextOverview = { ...emptyOverview };
+
+    results.forEach((result) => {
+      if (result.status === "fulfilled") {
+        const [key, total] = result.value;
+        nextOverview[key] = total;
+      }
+    });
+
+    setOverview(nextOverview);
+    setLoadError(
+      results.some((result) => result.status === "rejected")
+        ? "تعذر تحميل بعض الإحصائيات."
+        : "",
+    );
+    setLoading(false);
+  }, []);
+
+  // ✅ ADD: load counts when the dashboard opens and cancel requests on exit.
+ useEffect(() => {
+   void refreshOverview(); // Load counts when the page opens.
+
+   const intervalId = window.setInterval(() => {
+     void refreshOverview(); // Refresh counts every 60 seconds.
+   }, 60_000);
+
+   return () => {
+     window.clearInterval(intervalId);
+     requestControllerRef.current?.abort();
+   };
+ }, [refreshOverview]);
+
+  // ✅ ADD: build the cards from API data. “القطاعات” maps to the backend
+  // sectors endpoint; change it only if your program data is stored elsewhere.
+  const stats = useMemo(
+    () => [
+      {
+        title: "الأخبار",
+        value: overview.posts ?? (loading ? "…" : "—"),
+        description: "إجمالي المنشورات",
+        icon: "▤",
+      },
+      {
+        title: "المشاريع",
+        value: overview.projects ?? (loading ? "…" : "—"),
+        description: "إجمالي المشاريع",
+        icon: "◇",
+      },
+      {
+        title: "القطاعات",
+        value: overview.sectors ?? (loading ? "…" : "—"),
+        description: "إجمالي القطاعات",
+        icon: "◫",
+      },
+      {
+        title: "الرسائل",
+        value: overview.messages ?? (loading ? "…" : "—"),
+        description: "إجمالي الرسائل",
+        icon: "✉",
+      },
+    ],
+    [overview, loading],
+  );
+
   return (
     <div className="space-y-8" dir="rtl">
       {/* Page Heading */}
@@ -57,6 +152,24 @@ export default function AdminDashboard() {
         <p className="mt-2 text-sm text-slate-500">
           مرحبًا بك في لوحة إدارة موقع Salam. من هنا يمكنك إدارة محتوى الموقع.
         </p>
+        {/* ✅ ADD: allow the admin to refresh counts without reloading the page. */}
+        <div className="mt-4 flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={refreshOverview}
+            disabled={loading}
+            aria-busy={loading}
+            className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-wait disabled:opacity-60"
+          >
+            {loading ? "جارٍ التحديث..." : "تحديث الإحصائيات"}
+          </button>
+
+          {loadError && (
+            <p role="status" className="text-sm text-amber-700">
+              {loadError}
+            </p>
+          )}
+        </div>
       </div>
 
       {/* Statistics */}
@@ -199,21 +312,10 @@ export default function AdminDashboard() {
           <h2 className="text-base font-bold text-slate-900">الوصول السريع</h2>
 
           <div className="mt-5 space-y-2">
-            <QuickLink
-              icon="▤"
-              title="الأخبار"
-              description="إدارة أخبار الموقع"
-            />
-
-            <QuickLink icon="◫" title="البرامج" description="إدارة البرامج" />
-
+            <QuickLink icon="▤" title="الأخبار"   description="إدارة أخبار الموقع"/>
+            <QuickLink icon="◫" title="البرامج"  description="إدارة البرامج" />
             <QuickLink icon="▱" title="المشاريع" description="إدارة المشاريع" />
-
-            <QuickLink
-              icon="⚙"
-              title="الإعدادات"
-              description="إعدادات الموقع"
-            />
+            <QuickLink icon="⚙" title="الإعدادات" description="إعدادات الموقع" />
           </div>
         </div>
       </section>
@@ -285,42 +387,21 @@ export default function AdminDashboard() {
   );
 }
 
-function QuickLink({ icon, title, description }) {
+// ✅ REPLACE: use a Link because each quick-access item navigates to a page.
+function QuickLink({ to, icon, title, description }) {
   return (
-    <button
-      type="button"
-      className="
-        group
-        flex w-full
-        items-center gap-3
-        rounded-xl
-        p-3
-        text-right
-        transition
-        hover:bg-[#D8B98A]/15
-      "
+    <Link
+      to={to}
+      className="group flex w-full items-center gap-3 rounded-xl p-3 text-right transition hover:bg-[#D8B98A]/15"
     >
-      <div
-        className="
-          flex h-10 w-10
-          shrink-0
-          items-center justify-center
-          rounded-xl
-          bg-[#78B33B]/10
-          text-[#78B33B]
-          transition
-          group-hover:bg-[#78B33B]
-          group-hover:text-white
-        "
-      >
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#78B33B]/10 text-[#78B33B] transition group-hover:bg-[#78B33B] group-hover:text-white">
         {icon}
       </div>
 
       <div>
         <p className="text-sm font-semibold text-slate-900">{title}</p>
-
         <p className="mt-0.5 text-xs text-slate-500">{description}</p>
       </div>
-    </button>
+    </Link>
   );
 }

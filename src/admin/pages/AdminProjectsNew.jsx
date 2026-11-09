@@ -1,21 +1,62 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import Api from "../../data/api";
+
+const STATUS = ["planned", "ongoing", "completed", "suspended"];
+const VISIBILITY = ["draft", "scheduled", "published", "archived"];
+
 
 function AdminProjectsNew() {
   const navigate = useNavigate();
-
-  const [formData, setFormData] = useState({
+const [isSaving, setIsSaving] = useState(false);
+const [error, setError] = useState("");
+  const [formDataBs, setFormDataBs] = useState({
     title: "",
     description: "",
     content: "",
     image: "",
-    status: "نشط",
+    status: STATUS,
+    //////////////////////
+    code: "",
+    // status: "",
+    start_date: "",
+    end_date: "",
+    budget_amount: 0,
+    budget_currency: 0,
+    show_budget: 0,
+    beneficiaries_total: 0,
+    beneficiaries_women: 0,
+    beneficiaries_men: 0,
+    beneficiaries_girls: 0,
+    beneficiaries_boys: 0,
+    cover_media_id: "",
+    is_featured: true,
+    visibility: VISIBILITY,
+    sector_ids: "",
+    location_ids: "",
+    donor_ids: "",
   });
+    const [formDataTr, setFormDataTr] = useState({
+      title: "",
+      description: "",
+      content: "",
+      image: "",
+      status: "نشط",
+      ///////////////////
+      // slug,
+      // title: Joi.string().trim().max(250),
+      summary: "",
+      objectives: "",
+      // description: text,
+      results: "",
+      meta_title: "",
+      meta_description: "",
+    });
 
   const handleChange = (e) => {
     const { name, value } = e.target;
 
-    setFormData((current) => ({
+    setFormDataBs((current) => ({
       ...current,
       [name]: value,
     }));
@@ -25,7 +66,7 @@ function AdminProjectsNew() {
     e.preventDefault();
 
     // حفظ مؤقت - سيتم ربط Backend لاحقًا
-    console.log("New project:", formData);
+    console.log("New project:", formDataBs);
 
     navigate("/admin/projects");
   };
@@ -72,20 +113,35 @@ function AdminProjectsNew() {
               {/* Title */}
               <div className="mb-5">
                 <label className="mb-2 block text-sm font-semibold text-[#3d2a1c]">
-                  اسم المشروع
+                  اسم المشروع:
                 </label>
 
                 <input
                   type="text"
                   name="title"
-                  value={formData.title}
+                  value={formDataBs.title}
                   onChange={handleChange}
                   placeholder="أدخل اسم المشروع"
                   required
                   className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#78B33B] focus:bg-white"
                 />
               </div>
+              {/* project code */}
+              <div className="mb-5">
+                <label className="mb-2 block text-sm font-semibold text-[#3d2a1c]">
+                  كود المشروع:
+                </label>
 
+                <input
+                  type="text"
+                  name="title"
+                  value={formDataBs.code}
+                  onChange={handleChange}
+                  placeholder="أدخل كود المشروع"
+                  required
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#78B33B] focus:bg-white"
+                />
+              </div>
               {/* Description */}
               <div className="mb-5">
                 <label className="mb-2 block text-sm font-semibold text-[#3d2a1c]">
@@ -94,7 +150,7 @@ function AdminProjectsNew() {
 
                 <textarea
                   name="description"
-                  value={formData.description}
+                  value={formDataBs.summary}
                   onChange={handleChange}
                   placeholder="أدخل وصفًا مختصرًا للمشروع"
                   rows={4}
@@ -103,7 +159,7 @@ function AdminProjectsNew() {
                 />
               </div>
 
-              {/* Content */}
+              {/* description */}
               <div className="mb-5">
                 <label className="mb-2 block text-sm font-semibold text-[#3d2a1c]">
                   المحتوى الكامل
@@ -111,10 +167,40 @@ function AdminProjectsNew() {
 
                 <textarea
                   name="content"
-                  value={formData.content}
+                  value={formDataBs.description}
                   onChange={handleChange}
                   placeholder="أدخل المحتوى الكامل للمشروع"
                   rows={9}
+                  className="w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-7 outline-none transition focus:border-[#78B33B] focus:bg-white"
+                />
+              </div>
+              {/* Objective */}
+              <div className="mb-5">
+                <label className="mb-2 block text-sm font-semibold text-[#3d2a1c]">
+                  اهداف المشروع:
+                </label>
+
+                <textarea
+                  name="content"
+                  value={formDataBs.objectives}
+                  onChange={handleChange}
+                  placeholder="أدخل  اهداف للمشروع"
+                  rows={4}
+                  className="w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-7 outline-none transition focus:border-[#78B33B] focus:bg-white"
+                />
+              </div>
+              {/* Objective */}
+              <div className="mb-5">
+                <label className="mb-2 block text-sm font-semibold text-[#3d2a1c]">
+                  نتائج المشروع:
+                </label>
+
+                <textarea
+                  name="content"
+                  value={formDataBs.objectives}
+                  onChange={handleChange}
+                  placeholder="أدخل نتائج للمشروع"
+                  rows={4}
                   className="w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-7 outline-none transition focus:border-[#78B33B] focus:bg-white"
                 />
               </div>
@@ -128,7 +214,7 @@ function AdminProjectsNew() {
                 <input
                   type="text"
                   name="image"
-                  value={formData.image}
+                  value={formDataBs.image}
                   onChange={handleChange}
                   placeholder="/images/projects/project.jpg"
                   className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#78B33B] focus:bg-white"
@@ -143,12 +229,15 @@ function AdminProjectsNew() {
 
                 <select
                   name="status"
-                  value={formData.status}
+                  value={formDataBs.status}
                   onChange={handleChange}
                   className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-[#78B33B] focus:bg-white"
                 >
-                  <option value="نشط">نشط</option>
-                  <option value="غير نشط">غير نشط</option>
+                  {
+                    STATUS.map((ele) => (
+                      <option value={ele}>{ele}</option>
+                    ))
+                  }
                 </select>
               </div>
 
@@ -181,10 +270,10 @@ function AdminProjectsNew() {
               </div>
 
               <div className="h-56 bg-slate-200">
-                {formData.image ? (
+                {formDataBs.image ? (
                   <img
-                    src={formData.image}
-                    alt={formData.title || "معاينة المشروع"}
+                    src={formDataBs.image}
+                    alt={formDataBs.title || "معاينة المشروع"}
                     className="h-full w-full object-cover"
                     onError={(e) => {
                       e.currentTarget.style.display = "none";
@@ -200,20 +289,20 @@ function AdminProjectsNew() {
               <div className="p-5">
                 <span
                   className={`rounded-full px-4 py-1.5 text-xs font-semibold ${
-                    formData.status === "نشط"
+                    formDataBs.status === "نشط"
                       ? "bg-[#78B33B] text-white"
                       : "bg-slate-700 text-white"
                   }`}
                 >
-                  {formData.status}
+                  {formDataBs.status}
                 </span>
 
                 <h3 className="mt-4 text-xl font-bold text-[#3d2a1c]">
-                  {formData.title || "اسم المشروع"}
+                  {formDataBs.title || "اسم المشروع"}
                 </h3>
 
                 <p className="mt-3 text-sm leading-7 text-slate-500">
-                  {formData.description || "سيظهر الوصف المختصر للمشروع هنا."}
+                  {formDataBs.description || "سيظهر الوصف المختصر للمشروع هنا."}
                 </p>
               </div>
             </div>
