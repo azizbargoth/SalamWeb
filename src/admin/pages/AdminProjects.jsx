@@ -27,47 +27,14 @@ function mapProject(project) {
   return {
     ...project,
     description: project.summary ?? project.description ?? "",
-    image: project.cover_image ?? "",
+    image:`${Api.defaults.baseURL.replace(/\/api\/?$/, "")}${project.cover_image}`,
     statusLabel: PROJECT_STATUS_LABELS[project.status] ?? project.status,
     visibilityLabel:
       VISIBILITY_LABELS[project.visibility] ?? project.visibility,
   };
 }
 
-const initialProjects = [
-  {
-    id: 1,
-    title: "مشروع دعم الأسر",
-    description:
-      "مشروع يهدف إلى تقديم الدعم والمساعدة للأسر الأكثر احتياجًا وتحسين ظروفهم المعيشية.",
-    image: "/images/projects/family-support.jpg",
-    status: "نشط",
-  },
-  {
-    id: 2,
-    title: "مشروع التعليم",
-    description:
-      "مبادرة تهدف إلى دعم التعليم وتوفير فرص تعليمية أفضل للأطفال والشباب.",
-    image: "/images/projects/education.jpg",
-    status: "نشط",
-  },
-  {
-    id: 3,
-    title: "مشروع الرعاية الصحية",
-    description:
-      "مشروع يساهم في دعم الرعاية الصحية وتوفير الخدمات الطبية للفئات الأكثر احتياجًا.",
-    image: "/images/projects/healthcare.jpg",
-    status: "غير نشط",
-  },
-  {
-    id: 4,
-    title: "مشروع تمكين الشباب",
-    description:
-      "مبادرة تهدف إلى تطوير مهارات الشباب ودعمهم وفتح فرص جديدة أمامهم.",
-    image: "/images/projects/youth.jpg",
-    status: "نشط",
-  },
-];
+
 
 function AdminProjects() {
   const [projects, setProjects] = useState([]);
@@ -265,6 +232,7 @@ function AdminProjects() {
               !error &&
               filteredProjects.map((project) => (
                 <article
+               
                   key={project.id}
                   className="overflow-hidden rounded-2xl bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-md"
                 >

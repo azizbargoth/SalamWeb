@@ -1,17 +1,21 @@
 import { toast } from "react-toastify";
 
+const toastOptions = {
+  position: "top-right",
+  pauseOnHover: true,
+  theme: "light",
+  hideProgressBar: false,
+  autoClose: 3000,
+  draggable: false,
+};
+
 export const notefySuccess = (msg) => {
   toast.success(msg, {
-    position: "top-right",
-    autoClose: 3000,
-    hideProgressBar: false,
-    // newestOnTop: false,
+      ...toastOptions,
     closeOnClick: false,
     // rtl: false,
     // pauseOnFocusLoss: false,
-    draggable: false,
-    pauseOnHover: false,
-    theme: "light",
+   
     // transition: "Bounce",
     progress:"undefined",
     className: "toast-success",
@@ -20,16 +24,13 @@ export const notefySuccess = (msg) => {
 
 export const notefyInfo = (msg) => {
   toast.success(msg, {
-    position: "top-right",
-    autoClose: 3000,
+    ...toastOptions,
     hideProgressBar: false,
     // newestOnTop: false,
     closeOnClick: true,
     // rtl: false,
     // pauseOnFocusLoss: false,
-    draggable: true,
-    pauseOnHover: true,
-    theme: "light",
+    // draggable: true,
     // transition: "Bounce",
     progress : undefined,
     // className: "toast-info",
@@ -38,16 +39,13 @@ export const notefyInfo = (msg) => {
 
 export const notefyError = (msg) => {
   toast.success(msg, {
-    position: "top-right",
-    autoClose: 5000,
+    ...toastOptions,
     hideProgressBar: false,
     newestOnTop: false,
     closeOnClick: false,
     rtl: false,
     pauseOnFocusLoss: false,
-    draggable: false,
-    pauseOnHover: false,
-    theme: "light",
+    // draggable: false,
     transition: "Bounce",
     className: "toast-error",
   });

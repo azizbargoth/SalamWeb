@@ -31,7 +31,6 @@ export default function AdminHeader({ onMenuClick }) {
     user?.name ||
     [user?.firstName, user?.lastName].filter(Boolean).join(" ") ||
     "Administrator";
-    console.log(user)
   // const avatarUrl =
   //   user?.avatarUrl || user?.avatar || user?.profileImage || user?.image;
 

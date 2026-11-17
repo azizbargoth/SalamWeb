@@ -9,7 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from 'react-toastify';
 import { notefyInfo,notefySuccess } from '../../js/Tosats';
 const inputClass =
-  "w-full rounded-lg border border-[#262B36] text-black placeholder-[#8B92A3]/60 px-3.5 py-2.5 text-sm outline-none focus:border-[#E8A33D] focus:ring-1 focus:ring-[#E8A33D] transition-colors";
+  "w-full rounded-lg border border-[#262B36] text-black placeholder-[#8B92A3]/60 px-3.5 py-2.5 text-lg outline-none focus:border-[#78B33B] focus:ring-1 focus:[#78B33B] transition-colors";
 
 const loginSchema= Yup.object({
      email: Yup.string().email("Enter a valid email.").required("Email is required."),
@@ -64,61 +64,92 @@ const LoginForm1 = ({onSuccess}) => {
         }
       }
   return (
-    <div className=" w-full  flex items-center justify-center px-4 py-4 border-gray-500 rounded">
-      
-      <div>
-        <div className='text-center'><ToastContainer />
-          <p className="font-mono text-xs tracking-[0.2em]  uppercase mb-2">
-            
-          </p>
-          <h1 className="text-2xl font-semibold font-serif mb-12">login</h1>
+    <div className="  mt-30 flex items-center justify-center  border-gray-500 rounded">
+      <div className='w-72'>
+        <div className="text-center">
+          <ToastContainer />
+          <p className="font-mono text-xs tracking-[0.2em]  uppercase mb-2"></p>
+          <h1 className="text-3xl font-semibold font-serif mb-12">login</h1>
         </div>
-        <Formik           
+        <Formik
           initialValues={{ email: "", password: "" }}
           validationSchema={loginSchema}
-          onSubmit={handleSubmit}>
-            {({isSubmitting}) => (
-              <Form className="bg-slate-200/50 border border-[#bbdefb] rounded-xl px-6 sm:p-8" noValidate>
-                {formError && (
-                  <div className="mb-5 rounded-lg border border-[#F87171]/30 bg-[#F87171]/10 px-3 py-2.5">
-                    <span className="text-[#9b2226] text-sm">{formError}</span>
-                  </div>
-                )}
-                <div><p>{resMessage}</p></div>
-                <div className="mb-4">
-                  <label htmlFor="email" className="block font-mono text-xs uppercase tracking-wide mb-1.5">
-                    Email
+          onSubmit={handleSubmit}
+        >
+          {({ isSubmitting }) => (
+            <Form
+              className="bg-slate-200/50 border border-[#bbdefb] rounded-xl px-6 sm:p-8"
+              noValidate
+            >
+              {formError && (
+                <div className="mb-5 rounded-lg border border-[#F87171]/30 bg-[#F87171]/10 px-3 py-2.5">
+                  <span className="text-[#9b2226] text-sm">{formError}</span>
+                </div>
+              )}
+              <div>
+                <p>{resMessage}</p>
+              </div>
+              <div className="mb-4">
+                <label
+                  htmlFor="email"
+                  className="block font-mono text-xs uppercase tracking-wide mb-1.5"
+                >
+                  Email
+                </label>
+                <Field
+                  id="email"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  palceholder="example@email.com"
+                  className={inputClass}
+                />
+                <ErrorMessage
+                  name="email"
+                  component="p"
+                  className="mt-1 text-xs text-[#F87171]"
+                />
+              </div>
+              <div className="mb-4">
+                <div className="flex items-center justify-between mb-1.5">
+                  <label
+                    htmlFor="password"
+                    className="block font-mono text-xs uppercase tracking-wide mb-1.5"
+                  >
+                    Password
                   </label>
-                  <Field id="email" name="email" type="email" autoComplete="email" palceholder="example@email.com" className={inputClass} />
-                    <ErrorMessage name="email" component="p" className="mt-1 text-xs text-[#F87171]" />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((s) => !s)}
+                    className="text-xs text-[#8B92A3] hover:text-[#E8E6E1] transition-colors"
+                  >
+                    {showPassword ? "Hide" : "Show"}
+                  </button>
                 </div>
-                <div className="mb-4">
-                  <div className="flex items-center justify-between mb-1.5">
-                    <label htmlFor="password" className="block font-mono text-xs uppercase tracking-wide mb-1.5">
-                      Password
-                    </label>
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword((s) => !s)}
-                      className="text-xs text-[#8B92A3] hover:text-[#E8E6E1] transition-colors">
-                      {showPassword ? "Hide" : "Show"}
-                    </button>
-                  </div>
-                  <Field id="password" name="password" 
-                      type={showPassword ? "text" : "password"}
-                      autoComplete="current-password"
-                      palceholder="*********" 
-                      className={inputClass} />
-                    <ErrorMessage name="password" component="p" className="mt-1 text-xs text-[#F87171]" />
-                </div>
-                <button type="submit"
+                <Field
+                  id="password"
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  autoComplete="current-password"
+                  palceholder="*********"
+                  className={inputClass}
+                />
+                <ErrorMessage
+                  name="password"
+                  component="p"
+                  className="mt-1 text-xs text-[#F87171]"
+                />
+              </div>
+              <button
+                type="submit"
                 disabled={isSubmitting}
-                className="w-full rounded-lg bg-[#E8A33D] text-[#171A21] font-medium text-sm py-2.5 hover:bg-[#DE9527] active:scale-[0.99] disabled:opacity-60 disabled:active:scale-100 transition-all">
-                    {isSubmitting ? "signing in....": "sign in"}
-                </button>
-                {/* <ToastContainer />  */}
-              </Form>
-            )}
+                className=" mt-3 rounded-xl bg-[#78B33B] px-6 py-3 text-xl font-semibold text-white transition hover:bg-[#3d2a1c] disabled:cursor-wait disabled:opacity-60 w-full"
+              >
+                {isSubmitting ? "signing in...." : "sign in"}
+              </button>
+              {/* <ToastContainer />  */}
+            </Form>
+          )}
         </Formik>
         {/* <p className="mt-6 text-center text-sm text-[#8B92A3]">
           Don't have an account?{" "}
@@ -128,7 +159,7 @@ const LoginForm1 = ({onSuccess}) => {
          </p> */}
       </div>
     </div>
-  )
+  );
 }
 
 export default LoginForm1

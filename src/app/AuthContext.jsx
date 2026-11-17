@@ -1,6 +1,6 @@
 /////--------this file added by Aziz
 
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 
 const API_BASE =
   import.meta.env?.VITE_API_BASE || "http://localhost:5000/api/auth";
@@ -21,33 +21,48 @@ export function getMediaUrl(path) {
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true); // true until the initial /me check resolves
+const [authChecked, setAuthChecked] = useState(false);
+const sessionRequestRef = useRef(null);
 
-  useEffect(() => {
-    let cancelled = false;
+const checkSession = useCallback(() => {
+  // Prevent duplicate /me calls if the route renders more than once.
+  if (sessionRequestRef.current) return sessionRequestRef.current;
 
-    fetch(`${API_BASE}/me`, { method: "GET", credentials: "include" })
-      .then(async (res) => {
-        if (!res.ok) return null;
-        // const data = await res.json();
-        // console.log(data)
-        return getUserFromResponse(await res.json());
-      })
-      .then((authenticatedUser) => {
-        if (!cancelled) setUser(authenticatedUser);
-      })
-      .catch(() => {
-        if (!cancelled) setUser(null);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
+  setLoading(true);
+
+  sessionRequestRef.current = (async () => {
+    try {
+      const response = await fetch(`${API_BASE}/me`, {
+        method: "GET",
+        credentials: "include",
       });
 
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+      if (!response.ok) {
+        setUser(null);
+        return false;
+      }
 
-  const login = (userData) => setUser(userData);
+      const authenticatedUser = getUserFromResponse(await response.json());
+      setUser(authenticatedUser ?? null);
+      return Boolean(authenticatedUser);
+    } catch {
+      setUser(null);
+      return false;
+    } finally {
+      setAuthChecked(true);
+      setLoading(false);
+      sessionRequestRef.current = null;
+    }
+  })();
+
+  return sessionRequestRef.current;
+}, []);
+
+  const login = (userData) => {
+  setUser(userData);
+  setAuthChecked(true);
+  setLoading(false);
+};
   const updateUser = (updates) =>
     setUser((current) => ({ ...current, ...updates }));
 
@@ -64,7 +79,7 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, loading, login, logout, updateUser, isAuthenticated: !!user }}
+      value={{ user, loading, login, logout, updateUser,checkSession, authChecked ,isAuthenticated: !!user }}
     >
       {children}
     </AuthContext.Provider>

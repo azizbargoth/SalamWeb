@@ -1,15 +1,31 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Link } from "react-router-dom";
-import { projects as projectData } from "../features/projects/data/projects.data";
+import Api from "../data/api";
+// import { projects as projectData } from "../features/projects/data/projects.data";
 
+const PROJECT_STATUS_LABELS = {
+  planned: "مخطط",
+  ongoing: "جاري",
+  completed: "مكتمل",
+  suspended: "موقوف",
+};
 
-function Projects() {
-  const [activeFilter, setActiveFilter] = useState("all");
-
-
-  const projects = [
-    {
+const VISIBILITY_LABELS = {
+  draft: "مسودة",
+  scheduled: "مجدول",
+  published: "منشور",
+  archived: "مؤرشف",
+};
+const PROJECT_STATUS_FILTERS = [
+  { label: "الكل", value: "all" },
+  { label: "مخطط", value: "planned" },
+  { label: "جاري", value: "ongoing" },
+  { label: "مكتمل", value: "completed" },
+  { label: "موقوف", value: "suspended" },
+];
+const initialProjects=[
+  {
       id: 1,
       title: "مشروع دعم المجتمع المحلي",
       description:
@@ -63,13 +79,61 @@ function Projects() {
       status: "قيد التنفيذ",
       image: "https://images.unsplash.com/photo-1511632765486-a01980e01a18",
     },
-  ];
+]
+function mapProject(project) {
+  return {
+    ...project,
+    description: project.summary ?? project.description ?? "",
+    image:  `${Api.defaults.baseURL.replace(/\/api\/?$/, "")}${project.cover_image}`,
+      
+    statusLabel: PROJECT_STATUS_LABELS[project.status] ?? project.status,
+    visibilityLabel:
+      VISIBILITY_LABELS[project.visibility] ?? project.visibility,
+  };
+}
 
+function Projects() {
+
+  const [projects, setProjects] = useState([]);
+  const [activeFilter, setActiveFilter] = useState("all");
+  const [loading,setLoading]=useState(true)
+  const [error,setError]=useState("")
+  // const [reloadKey,setReloadKey]=useState(0)
+
+   useEffect(() => {
+     const controller = new AbortController();
+     async function loadProjects() {
+       setLoading(true);
+       setError("");
+
+       try {
+         const response = await Api.get("/projects", {
+           params: { page: 1, limit: 50, lang: "ar" },
+           signal: controller.signal,
+         });
+         const rows = response.data?.data ?? [];
+         setProjects(rows.map(mapProject));
+       } catch (requestError) {
+         if (requestError.code !== "ERR_CANCELED") {
+           setError("تعذر تحميل المشاريع. تحقق من تسجيل الدخول واتصال الخادم.");
+         }
+       } finally {
+         if (!controller.signal.aborted) setLoading(false);
+       }
+     }
+     void loadProjects();
+     // useEffect returns cleanup, not the project list.
+     return () => controller.abort();
+   }, []);
+
+
+
+  
 
   const filteredProjects =
     activeFilter === "all"
       ? projects
-      : projects.filter((project) => project.category === activeFilter);
+      : projects.filter((project) => project.status === activeFilter);
 
   return (
     <main dir="rtl" className="bg-slate-50">
@@ -139,6 +203,8 @@ function Projects() {
 
       {/* Projects */}
       <section className="mx-auto max-w-6xl px-6 pb-20">
+        {loading && <p role="status">جارٍ تحميل المشاريع...</p>}
+        {error && <p role="alert">{error}</p>}
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
           {filteredProjects.map((project) => (
             <article
@@ -156,7 +222,7 @@ function Projects() {
                 {/* Status */}
                 <span
                   className={`absolute right-4 top-4 rounded-full px-3 py-1 text-xs font-semibold ${
-                    project.category === "completed"
+                    project.status === "completed"
                       ? "bg-green-100 text-green-700"
                       : "bg-amber-100 text-amber-700"
                   }`}
@@ -175,14 +241,12 @@ function Projects() {
                   {project.description}
                 </p>
 
-
                 <Link
                   to="/projects"
                   className="font-semibold text-[#3d2a1c] transition hover:opacity-70"
                 >
                   عرض تفاصيل المشروع ←
                 </Link>
-
               </div>
             </article>
           ))}
@@ -199,14 +263,12 @@ function Projects() {
             المساهمة في دعم أعمال المنظمة.
           </p>
 
-
           <Link
             to="/contact"
             className="inline-block rounded-lg bg-white px-8 py-3 font-semibold text-[#3d2a1c] transition hover:bg-slate-100"
           >
             تواصل معنا
           </Link>
-
         </div>
       </section>
     </main>
