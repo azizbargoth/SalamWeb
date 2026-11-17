@@ -37,6 +37,9 @@ import MainLayout from "../components/layout/MainLayout";
 import ProtectedRoute from "./ProtectRoutes";//Adde By Aziz to protect routes
 import Login from "../admin/pages/Login";//added by aziz
 import { createBrowserRouter } from "react-router-dom";
+import AdminPartners from "../admin/pages/AdminPartners";
+import AdminPartnersNew from "../admin/pages/AdminPartnersNew";
+import AdminPartnersEdit from "../admin/pages/AdminPartnersEdit";
 ///---the below code updated by aziz
 const routes = [
   // Public website
@@ -92,6 +95,9 @@ const routes = [
       { path: "messages/:id", element: <AdminMassageDetails /> },
       { path: "donations", element: <AdminDonations /> },
       { path: "donations/:id", element: <AdminDonationDetails /> },
+      { path: "partners", element: <AdminPartners /> },
+      { path: "partners/new", element: <AdminPartnersNew /> },
+      { path: "partners/edit/:id", element: <AdminPartnersEdit /> },
     ],
   },
 ];
