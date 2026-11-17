@@ -759,7 +759,7 @@ function AdminProjectsEdit() {
                   id={`language-panel-${activeLanguage}`}
                   role="tabpanel"
                   aria-labelledby={`language-tab-${activeLanguage}`}
-                  dir={activeLanguage === "en" ? "ltr" : "rtl"}
+                  dir={activeLanguage === "ar" ? "rtl" : "ltr"}
                 >
                   <TextInput
                     id={`title-${activeLanguage}`}
